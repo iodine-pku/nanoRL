@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+.python-version
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+
+# Logs and outputs
+*.log
+/tmp/
+out/
+
+# Local Claude session config (launch.json etc.)
+.claude/

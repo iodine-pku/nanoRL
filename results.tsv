@@ -1,0 +1,92 @@
+commit	val_acc	peak_gb	status	description
+2bf69c5	0.3400	45.1	keep	baseline (Qwen2.5-0.5B-Instruct, B=4, lr=5e-6, β=0.04, G=4, mb=2)
+32fd877	0.3450	44.4	keep	drop ref model (β=0, clip-only PPO); 6 steps, best_ema=0.562
+b2529c6	0.3400	44.0	keep	minibatch=1 (simpler, neutral val_acc); 7 steps
+3ba6ca3	0.1250	36.4	discard	max_new_tokens=128 truncates GSM8K CoT → -21.5pp; 49 steps tho
+7f49616	0.3300	46.7	discard	lr=1e-5 → -1pp, training overshoots (ema peaks step 4 then drops)
+3931283	0.0200	51.5	discard	SFT warmup 60s wrecked greedy decoding (-32pp); training EMA still 0.41 but eval collapsed
+b906621	0.3350	46.7	discard	temp=0.7 → peak EMA 0.625 (highest) but val_acc neutral (-0.5pp); sharper rollouts ≠ better policy
+a40d2c9	0.3350	46.6	discard	shaped reward (+0.2 format bonus) → high EMA but val_acc neutral
+892600f	0.3300	45.8	discard	SGD lr=5e-5: -1pp, EMA drifts down (unstable); no memory savings observed
+f0ebc0c	0.3250	46.7	discard	G=8 B=2: high initial EMA 0.69 → 0.29 crash; less prompt diversity destabilizes
+66c1502	0.3000	46.7	discard	grad clip 1.0: -4pp, EMA still crashes; tighter clip just shrinks effective lr
+a33c835	0.3600	44.1	keep	lr cosine decay (peak 1e-5 → 0): +2pp, EMA peaks 0.66 then settles 0.43
+a8c9865	0.3050	45.9	discard	lr peak 2e-5 cosine: -5.5pp, model wrecked in step 0; 1e-5 was the sweet spot
+023b71e	0.0000	0.0	crash	eps=0.1 + cosine 1e-5: NaN probs at step 3; tighter clip + high lr destabilizes
+5080867	0.3150	46.2	discard	cosine+temp=0.85: -4.5pp; low temp + decay constrains exploration too much
+9dc349c	0.3300	46.2	discard	cosine+eps=0.3: -3pp; wider clip let destabilizing moves through
+38f2c47	0.3750	44.1	keep	cosine decay + mb=2: +1.5pp over cosine alone, +3.5pp over baseline; second update at high lr is productive
+1bd6019	0.3400	44.4	discard	cosine+mb=3: 3 updates is too many, only 3 steps, drops back to baseline
+d18c637	0.3250	43.6	discard	cosine 1.5e-5 + mb=2: -5pp; mb=2 amplifies the higher peak past the sweet spot
+eca2ea6	0.0000	48.0	discard	G=6+cosine+mb=2: model collapsed at step 0, 6 skips before, val_acc=0
+04fdb36	0.2700	43.4	discard	Qwen2.5-0.5B base (no Instruct): -10pp; base has weaker math/format priors
+2672419	0.3450	44.4	discard	cosine 7e-6 + mb=2: -3pp; lower peak loses too much early signal
+4470e59	0.2900	44.5	discard	warmup 10% + cosine: -8.5pp; shorter peak phase loses too much early signal
+960d4ea	0.3150	42.5	discard	B=6 + cosine + mb=2: -6pp, only 2 steps; per-step cost outweighs diversity gain
+4325b4e	0.3400	44.4	discard	eps 0.25 + cosine + mb=2: -3.5pp; eps=0.2 sweet spot confirmed both directions
+7ce8ec9	0.3400	44.1	discard	linear decay (vs cosine): -3.5pp; cosine's near-peak plateau gives more high-lr steps
+de3a605	0.3300	45.2	discard	cosine to 1e-6 floor: -4.5pp; lr=0 tail apparently helps the policy settle
+b789b49	0.3000	44.3	discard	20-min keep-config: -7.5pp, 18 steps overshoot the 5-min-tuned lr peak
+64b7995	0.3400	44.4	keep	20-min + lr peak 5e-6 + cosine + mb=2: +4pp vs same-config-at-20min-1e-5; still overshoots a bit
+b4fd7c6	0.3450	46.4	keep	20-min + lr 5e-6 + mb=1: +0.5pp, 22 steps, stable EMA (no overshoot)
+3ecfe70	0.3900	46.4	keep	20-min + lr 1e-5 + mb=1: +4.5pp over prior 20-min keep, +5pp over 5-min best; 23 stable steps
+b8ee0b1	0.3800	45.9	discard	20-min + lr 1.5e-5 + mb=1: -1pp; 1e-5 peak still the sweet spot
+37b7b72	0.3200	39.1	discard	G=3 + mb=1 + lr 1e-5 + 20-min: -7pp, 59 steps overshoot; total signal × steps × lr too high
+d3d92e5	0.3400	47.6	discard	ref model + KL β=0.04 at 20-min: -5pp; ref forward eats steps (16 vs 22-23), KL didn't pay back
+b205dcc	0.3150	45.3	discard	lr peak 1.2e-5 at 20-min: noisy regression; 1e-5 still best
+e308a34	0.3200	46.7	discard	eps=0.15 at 20-min: -7pp; sharper EMA but val_acc collapses
+d22b22d	0.3550	46.7	discard	temp=1.1 at 20-min: -3.5pp; more exploration hurt convergence
+1a37d55	0.3450	45.9	discard	AdamW β2=0.99 at 20-min: -4.5pp; faster adaptation hurts here
+3ef8d57	0.3300	46.7	discard	weight_decay=0 at 20-min: -6pp; default 0.01 was actually helping
+086ce23	0.3300	45.8	discard	wd=0.1 at 20-min: -6pp; default 0.01 was sweet spot (both directions hurt)
+e26fdac	0.2950	46.6	discard	advantage mean-only (no std): -9.5pp; std-norm is doing real work
+8541c36	0.3000	46.7	discard	entropy bonus 0.01 at 20-min: -9pp; too aggressive, pushes log_probs down too much
+926cc86	0.3050	46.8	discard	entropy bonus 0.001 at 20-min: -8.5pp; entropy reg fundamentally wrong direction here
+083bf68	0.2750	44.3	discard	rejection sampling (pos-advantage only): -11.5pp; need pushing-away signal
+f5b4e56	0.3100	44.4	discard	mb=2 early + mb=1 late: -8pp; mb=2 at high lr triggers overshoot regardless of switch
+9ec6676	0.3450	46.9	discard	length-sorted batches: -4.5pp; correlated batches hurt more than padding gains help on GSM8K
+6df093a	0.3750	41.2	keep	freeze embeddings+lm_head: val_acc within noise (-1.5pp), but 27 steps (vs 23) and -5GB peak — frees design space
+47e26aa	0.0000	0.0	crash	B=6 + freeze embeddings: NaN; grad concentrates on FFN/attn → unstable at peak lr
+2fe9696	0.0000	0.0	crash	lr 7e-6 + freeze: garbage tokens emitted (decode OverflowError); freeze path is fragile
+6df093a	0.3750	41.2	retract	freeze embed retracted: -1.5pp, throughput gain didn't compound (B=6+freeze crashed)
+0f3f378	0.3200	46.8	rerun	RE-RUN of keep config: val_acc 0.32 (was 0.39); noise floor at this N=200 + budget is actually ±7pp, not ±2pp
+0f3f378	0.3500	46.9	rerun	3rd run keep config: 0.35; together with 0.39+0.32 → mean 0.35±0.035, noise floor much wider than program.md's ±2pp
+99d405f	0.2900	46.6	discard	asymmetric advantage (neg×0.5): -6pp from keep mean, loss collapsed (overshoot from unbalanced)
+c871691	0.3350	46.8	keep	constant lr=1e-5 (no cosine): within noise of keep; 3 lines simpler, removes math.cos
+e0f763e	0.2800	46.6	discard	shaped reward (0.5 for number-anywhere): 0.28 — BELOW base 0.32; partial credit confused the model
+8fe1f8f	0.3450	52.2	discard	STaR self-distillation (16min RL + 4min SFT on 157 own-correct rollouts): 0.345 — within noise of keep mean 0.353; self-SFT doesn't wreck greedy (unlike SFT-on-GSM8K) but no measurable gain
+18693c1	0.0000	0.0	crash	max_new_tokens=320: only 5 steps before process died; grad_norm 20.75 spike step 0; longer gen too slow + unstable
+5be2be6	0.3400	46.8	keep	seed=42 + keep config: 0.34, 25 steps; reference point for seeded comparisons
+ba06edd	0.2550	46.8	discard	seed=42 + lr=1.5e-5: -8.5pp vs seeded keep at 0.34; SEEDING MADE THE DIFFERENCE OBSERVABLE
+99fe592	0.3500	46.8	keep	seed=42 + lr=8e-6: +1pp over seeded 1e-5; sensitivity curve says lower is slightly better
+7d2115e	0.3550	46.8	keep	seed=42 + lr=5e-6: +1.5pp over 1e-5; lr-sensitivity curve consistently favors lower lr
+8bd43c8	0.3050	46.8	discard	seed=42 + lr=3e-6: -5pp from peak; too slow at 3e-6, lr=5e-6 is the sweet spot
+ec0eb3a	0.3500	44.5	discard	seeded lr=5e-6 + mb=2: 0.35 vs mb=1 0.355; doubled per-step compute → fewer steps → no net gain
+63e40ea	0.3200	46.8	discard	seed=42 + cosine 1e-5→0: -3.5pp vs constant 5e-6; cosine was never actually helping
+f223179	0.3050	46.9	discard	SEED=0 + lr=5e-6: 0.305 vs seed=42's 0.355 = 5pp gap from seed alone; 'best lr' is seed-dependent
+262b53a	0.0900	46.8	discard	Qwen2.5-Coder-0.5B-Instruct: 0.09 — code priors don't match math format; general Instruct is correct
+14bc4e4	0.3750	46.8	keep	seed=42 + temp anneal 1.2→0.8: +2pp; explore-early-exploit-late works
+7aacd15	0.3550	46.8	discard	seeded temp anneal 1.3→0.7: -2pp vs 1.2→0.8; wider range hurts
+04e350c	0.3200	46.8	discard	seeded temp anneal 1.1→0.9: -5.5pp; narrower range loses too much exploration
+f93bf1c	0.3400	46.8	discard	seeded anneal + eps=0.15: -3.5pp from anneal-only; tighter clip still hurts even with softer early temp
+a1acf98	0.3300	46.9	keep	SEED=0 anneal: 0.33 vs SEED=0 baseline 0.305 = +2.5pp; matches SEED=42's +2pp → CROSS-SEED REAL EFFECT
+4922b33	0.3450	44.5	discard	seeded anneal + mb=2: -3pp; mb=2 still overshoots even with anneal-softened early phase
+a27b6f5	0.3400	46.8	discard	seeded anneal 1.2→0.7: -3.5pp; end-temp 0.7 too sharp; 0.8 is peak
+048283e	0.3550	46.8	discard	seeded anneal + lr=6e-6: -2pp; lr=5e-6 still best with anneal
+2902aaa	0.3650	50.6	discard	seeded G=6 + anneal: -1pp, only 6 steps; G=6 too slow to compound, EMA collapsed (0.083)
+63824ea	0.3300	46.8	discard	seeded cosine-shape temp anneal: -4.5pp vs linear; linear's gradual drop is what works
+0fed8f6	0.2800	46.8	discard	seeded anneal + eps=0.18: -9.5pp; even mild eps tighten breaks the keep
+4d396d7	0.3150	46.8	discard	seeded anneal + top_p=0.9: -6pp; nucleus filtering removes the diverse exploration anneal relies on
+b25bd42	0.2750	42.5	discard	seeded anneal + max_new_tokens=192: -10pp; 40 steps but truncation hits hard. 256 is min for GSM8K
+82d8173	0.0000	43.1	crash	seeded G=5 + anneal: collapsed at step 1; G≠4 catastrophic with current config
+bf5c78b	0.3350	46.8	discard	seeded anneal + top_k=40: -4pp; token restriction hurts exploration, same pattern as top_p
+edc0a5b	0.0000	0.0	crash	cached old_log_probs from scores: EMA collapsed to 0.08, grad_norm spike to 73; temp inversion has bf16 numerical mismatch with raw-logit log_softmax, causes phantom PPO updates from step 0
+1d7a579	0.3150	46.8	discard	RLOO leave-one-out advantage at seed=42 + anneal: -6pp; ~33% smaller advantage magnitude means lr=5e-6 undertrains. Std-norm at this budget actually helps
+5916f6e	0.3500	46.8	discard	Schedule-Free AdamW lr=5e-6: 0.35 val_acc (within noise of keep 0.355) but best EMA only 0.312 vs keep's 0.66; SF under-trains at this lr+budget. Plus adds dep + train/eval mode switching → fails simplicity criterion
+d854a4c	0.3500	46.4	discard	chat template (apply_chat_template w/ system+user roles): 0.35 val_acc — same as keep mean 0.353, but best EMA only 0.41 (vs keep's ~0.5-0.66). Higher init reward but doesn't compound. +14 lines, fails simplicity
+c8cb465	0.2950	46.8	discard	full TRAIN (7473 vs 500): -5.8pp; first 500 distribution closer to TEST[:200], diversity dilutes within fixed budget. EMA peak 0.40 healthy, but val_acc collapsed
+e106e4c	0.3400	46.8	discard	per-seq mean loss norm (vs dr-GRPO /max_seqlen): 0.34 within noise of keep 0.353; +3 lines, different loss scale breaks lr comparability with prior results, no gain
+2c97048	0.3450	46.8	keep	remove temp anneal: 0.345 within noise of keep 0.353 (±7pp); -3 lines (removed progress/temp/comment). Simplification win — temp anneal +2pp was noise
+ec4cf1c	0.3400	49.1	keep	drop PPO clip → plain REINFORCE: 0.34 within noise of keep 0.345, -16 lines net. With mb=1 ratio≡1 so clip never fired; was vestigial. (Side note: 17 steps vs 26 — fewer steps but each more impactful w/o clip)
+a4946a7	0.3450	49.1	discard	REINFORCE + lr=1e-5 (vs 5e-6): +0.5pp within noise; final EMA 0.261 vs best 0.375 = overshoot. Without PPO clip, higher lr more destructive
+3addc23	0.3250	49.1	discard	batch-wide std for adv normalization (per-group baseline kept): -1.5pp; per-group std amplifies rare-success signal — that focus is doing useful work
